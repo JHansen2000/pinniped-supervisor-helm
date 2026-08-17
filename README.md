@@ -131,5 +131,20 @@ which are unset but required by default (since `certificate.enabled`/`ingress.en
 them, that entry's own required fields (`name`, plus whichever fields the chart validates - see
 "Configuration" above) are enforced the same way.
 
+## Installing the Pinniped CLI
+```bash
+# Homebrew
+brew install vmware/pinniped/pinniped-cli
+```
+
+## Getting a Kubeconfig:
+```bash
+# This command gets a kubeconfig from the upstream server
+# it uses an OIDC provider named "Keycloak OIDC" and
+# stores the resulting file in ~/.kube/pinniped
+
+pinniped get kubeconfig --kubeconfig="~/.kube/config" --upstream-identity-provider-name "Keycloak OIDC" --upstream-identity-provider-type oidc > ~/.kube/pinniped
+```
+
 ## RBAC
 Kubernetes RBAC policies are *not* controlled by these charts. Recommended to use RBAC Manager to configure these.
