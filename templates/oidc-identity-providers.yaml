@@ -1,0 +1,15 @@
+{{- range .Values.oidcIdentityProviders }}
+{{- if not .name }}
+{{- fail "each oidcIdentityProviders[] entry requires a name" }}
+{{- end }}
+apiVersion: idp.supervisor.pinniped.dev/v1alpha1
+kind: OIDCIdentityProvider
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "pinniped-supervisor.labels" $ | nindent 4 }}
+spec:
+  {{- toYaml (required (printf "oidcIdentityProviders[%s].spec is required" .name) .spec) | nindent 2 }}
+---
+{{- end }}

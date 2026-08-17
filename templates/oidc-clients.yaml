@@ -1,0 +1,18 @@
+{{- range .Values.oidcClients }}
+{{- if not .name }}
+{{- fail "each oidcClients[] entry requires a name" }}
+{{- end }}
+{{- if not (hasPrefix "client.oauth.pinniped.dev-" .name) }}
+{{- fail (printf "oidcClients[%s].name must start with \"client.oauth.pinniped.dev-\"" .name) }}
+{{- end }}
+apiVersion: config.supervisor.pinniped.dev/v1alpha1
+kind: OIDCClient
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "pinniped-supervisor.labels" $ | nindent 4 }}
+spec:
+  {{- toYaml (required (printf "oidcClients[%s].spec is required" .name) .spec) | nindent 2 }}
+---
+{{- end }}

@@ -1,0 +1,26 @@
+Pinniped Supervisor has been installed into namespace "{{ .Release.Namespace }}".
+
+Chart version: {{ .Chart.Version }}
+App version:   {{ .Chart.AppVersion }}
+Image:         {{ include "pinniped-supervisor.image" . }}
+
+{{- if .Values.federationDomains }}
+Check rollout status with:
+{{- range .Values.federationDomains }}
+  kubectl get federationdomain {{ .name }} -n {{ $.Release.Namespace }} -o yaml
+  kubectl get jwtauthenticator supervisor-jwt-authenticator -o yaml
+{{- end }}
+{{- end }}
+
+{{- if not .Values.certificate.enabled }}
+
+NOTE: certificate.enabled is false. Make sure the Secret referenced by certificate.secretName
+(used by ingress.* and any federationDomains[].tls.secretName) exists before the FederationDomain(s)
+can serve HTTPS.
+{{- end }}
+
+{{- if not .Values.ingress.enabled }}
+
+NOTE: ingress.enabled is false. The Supervisor's OIDC endpoints will only be reachable via the
+"{{ include "pinniped-supervisor.fullname" . }}" Service unless you provide your own ingress.
+{{- end }}

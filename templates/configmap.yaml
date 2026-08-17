@@ -1,0 +1,18 @@
+{{- $fullname := include "pinniped-supervisor.fullname" . -}}
+{{- $config := deepCopy .Values.config -}}
+{{- $names := dict
+      "defaultTLSCertificateSecret" (printf "%s-default-tls-certificate" $fullname)
+      "apiService" (printf "%s-api" $fullname)
+-}}
+{{- $_ := set $config "names" $names -}}
+{{- $_ := set $config "labels" (dict "app" "pinniped-supervisor") -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fullname }}-static-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pinniped-supervisor.labels" . | nindent 4 }}
+data:
+  pinniped.yaml: |
+    {{- toYaml $config | nindent 4 }}

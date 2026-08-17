@@ -1,0 +1,15 @@
+{{- range .Values.federationDomains }}
+{{- if not .name }}
+{{- fail "each federationDomains[] entry requires a name" }}
+{{- end }}
+apiVersion: config.supervisor.pinniped.dev/v1alpha1
+kind: FederationDomain
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "pinniped-supervisor.labels" $ | nindent 4 }}
+spec:
+  {{- toYaml (required (printf "federationDomains[%s].spec is required" .name) .spec) | nindent 2 }}
+---
+{{- end }}

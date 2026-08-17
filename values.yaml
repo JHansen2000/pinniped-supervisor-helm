@@ -1,0 +1,238 @@
+# Default values for pinniped-supervisor
+# Declare variables to be passed into your templates
+# See values.schema.json for validation rules and README.md for full documentation
+
+# Override the chart name used in the "app.kubernetes.io/name" label
+nameOverride: ""
+# Override the computed release name used for resource names
+# Defaults to "pinniped-supervisor"
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/vmware/pinniped/pinniped-server
+  # Defaults to "v<appVersion>" from Chart.yaml when empty
+  tag: ""
+  # Pinned to the digest published in Pinniped's official install manifests for the
+  # appVersion above. Override (or set to "") if you bump image.tag independently
+  digest: "sha256:3a46e1ea8b874281698dd27e60d6f9b46738cb10483baa9dc78a0023cc17e29d"
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+replicaCount: 2
+
+serviceAccount:
+  supervisor:
+    create: true
+    name: ""
+    annotations: {}
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsUser: 65532
+  runAsGroup: 65532
+
+securityContext:
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations:
+  - key: kubernetes.io/arch
+    effect: NoSchedule
+    operator: Equal
+    value: amd64
+  - key: kubernetes.io/arch
+    effect: NoSchedule
+    operator: Equal
+    value: arm64
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 50
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              deployment.pinniped.dev: supervisor
+          topologyKey: kubernetes.io/hostname
+
+priorityClassName: ""
+
+extraEnv: []
+extraVolumes: []
+extraVolumeMounts: []
+
+service:
+  # Backs the aggregated APIService (clientsecret.supervisor.pinniped.dev)
+  api:
+    type: ClusterIP
+    annotations: {}
+  # Front door for the FederationDomain's HTTPS endpoints, e.g. behind ingress.*
+  oidc:
+    type: ClusterIP
+    annotations: {}
+
+apiService:
+  groupPriorityMinimum: 9900
+  versionPriority: 15
+
+# Rendered into the pinniped-supervisor-static-config ConfigMap's pinniped.yaml
+# https://github.com/vmware/pinniped/blob/main/deploy/supervisor/deployment.yaml
+config:
+  apiGroupSuffix: pinniped.dev
+  tls:
+    onedottwo:
+      allowedCiphers: []
+  audit:
+    logUsernamesAndGroups: disabled
+    logInternalPaths: disabled
+  aggregatedAPIServerDisableAdmissionPlugins: []
+
+# cert-manager Certificate providing the TLS serving certificate for the front-door
+# Service/Ingress (also usable as a FederationDomain's tls.secretName)
+certificate:
+  enabled: true
+  hostname: ""
+  clusterIssuer: ""
+  secretName: ""
+  duration: 17280h # 2y
+  renewBefore: 360h # 15d
+
+# All of the *IdentityProviders/federationDomains/oidcClients lists below share the same shape:
+# each entry is `{name, spec}`, and `spec` is passed through as-is into the resource's spec field.
+# This applies equally to every identity provider type (OIDC/LDAP/ActiveDirectory/GitHub) -
+# `spec` is validated server-side by the CRD itself rather than re-modeled field-by-field here, so
+# no identity provider type gets deeper chart-level support than another. None of these lists have
+# a live default entry - pick whichever identity provider type(s) you actually use and populate
+# federationDomains plus the matching *IdentityProviders/*Secrets lists below.
+
+# https://pinniped.dev/docs/reference/crds/#federationdomain
+# e.g. - name: ""
+#        spec:
+#          issuer: "" # e.g. https://supervisor.example.com
+#          tls:
+#            secretName: "" # should match certificate.secretName above, if used
+#          identityProviders:
+#            - displayName: ""
+#              objectRef:
+#                apiGroup: idp.supervisor.pinniped.dev
+#                kind: OIDCIdentityProvider # or LDAPIdentityProvider/ActiveDirectoryIdentityProvider/GitHubIdentityProvider
+#                name: ""
+federationDomains: []
+
+# https://pinniped.dev/docs/reference/crds/#oidcidentityprovider
+# e.g. - name: ""
+#        spec:
+#          issuer: ""
+#          tls:
+#            certificateAuthorityDataSource:
+#              kind: Secret
+#              name: ""
+#              key: ca.crt
+#          claims:
+#            username: ""
+#            groups: ""
+#          authorizationConfig:
+#            allowPasswordGrant: true
+#            additionalScopes: [profile, openid]
+#          client:
+#            secretName: "" # should match an entry's name in oidcClientSecrets below
+oidcIdentityProviders: []
+
+# https://pinniped.dev/docs/reference/crds/#ldapidentityprovider
+# e.g. - name: ""
+#        spec:
+#          host: ""
+#          bind:
+#            secretName: "" # should match an entry's name in bindSecrets below
+#          userSearch:
+#            base: ""
+#          groupSearch:
+#            base: ""
+ldapIdentityProviders: []
+
+# https://pinniped.dev/docs/reference/crds/#activedirectoryidentityprovider
+# e.g. - name: ""
+#        spec:
+#          host: ""
+#          bind:
+#            secretName: "" # should match an entry's name in bindSecrets below
+activeDirectoryIdentityProviders: []
+
+# https://pinniped.dev/docs/reference/crds/#githubidentityprovider
+# e.g. - name: ""
+#        spec:
+#          client:
+#            secretName: "" # should match an entry's name in githubClientSecrets below
+#          allowAuthentication:
+#            organizations:
+#              policy: OnlyUsersFromAllowedOrganizations
+#              allowed: []
+githubIdentityProviders: []
+
+# https://pinniped.dev/docs/reference/crds/#oidcclient
+# `name` must start with "client.oauth.pinniped.dev-"
+# e.g. - name: "client.oauth.pinniped.dev-my-client"
+#        spec:
+#          allowedGrantTypes: [authorization_code]
+#          allowedRedirectURIs: []
+#          allowedScopes: [openid]
+oidcClients: []
+
+# Secret(s) of type secrets.pinniped.dev/oidc-client holding the clientID/clientSecret referenced by
+# oidcIdentityProviders[].spec.client.secretName
+# e.g. - name: ""
+#        clientID: ""
+#        clientSecret: ""
+oidcClientSecrets: []
+
+# Secret(s) of type kubernetes.io/basic-auth holding the username/password referenced by
+# ldapIdentityProviders[].spec.bind.secretName and activeDirectoryIdentityProviders[].spec.bind.secretName
+# e.g. - name: ""
+#        username: ""
+#        password: ""
+bindSecrets: []
+
+# Secret(s) of type secrets.pinniped.dev/github-client holding the clientID/clientSecret referenced by
+# githubIdentityProviders[].spec.client.secretName
+# e.g. - name: ""
+#        clientID: ""
+#        clientSecret: ""
+githubClientSecrets: []
+
+# Ingress fronting the Supervisor's HTTPS endpoints (org-added convenience; not part of Pinniped's
+# upstream install manifest). TLS secret comes from certificate.secretName
+ingress:
+  enabled: true
+  hostname: ""
+  ingressClassName: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-buffers: "8 16k"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "32k"
+    nginx.ingress.kubernetes.io/large-client-header-buffers: "8 16k"
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+extraManifests: []

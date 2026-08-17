@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pinniped-supervisor.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pinniped-supervisor.labels" . | nindent 4 }}
+  annotations:
+    kapp.k14s.io/disable-default-label-scoping-rules: ""
+    {{- with .Values.service.api.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.service.api.type }}
+  selector:
+    {{- include "pinniped-supervisor.deploymentSelectorLabels" . | nindent 4 }}
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 10250
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pinniped-supervisor.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pinniped-supervisor.labels" . | nindent 4 }}
+  {{- with .Values.service.oidc.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.oidc.type }}
+  selector:
+    {{- include "pinniped-supervisor.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: 443
+      targetPort: 8443
+      protocol: TCP

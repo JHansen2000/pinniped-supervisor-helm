@@ -1,0 +1,15 @@
+{{- range .Values.activeDirectoryIdentityProviders }}
+{{- if not .name }}
+{{- fail "each activeDirectoryIdentityProviders[] entry requires a name" }}
+{{- end }}
+apiVersion: idp.supervisor.pinniped.dev/v1alpha1
+kind: ActiveDirectoryIdentityProvider
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "pinniped-supervisor.labels" $ | nindent 4 }}
+spec:
+  {{- toYaml (required (printf "activeDirectoryIdentityProviders[%s].spec is required" .name) .spec) | nindent 2 }}
+---
+{{- end }}

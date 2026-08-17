@@ -1,0 +1,15 @@
+{{- range .Values.githubIdentityProviders }}
+{{- if not .name }}
+{{- fail "each githubIdentityProviders[] entry requires a name" }}
+{{- end }}
+apiVersion: idp.supervisor.pinniped.dev/v1alpha1
+kind: GitHubIdentityProvider
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "pinniped-supervisor.labels" $ | nindent 4 }}
+spec:
+  {{- toYaml (required (printf "githubIdentityProviders[%s].spec is required" .name) .spec) | nindent 2 }}
+---
+{{- end }}

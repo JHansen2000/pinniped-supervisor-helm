@@ -1,0 +1,15 @@
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha1.clientsecret.supervisor.pinniped.dev
+  labels:
+    {{- include "pinniped-supervisor.labels" . | nindent 4 }}
+spec:
+  version: v1alpha1
+  group: clientsecret.supervisor.pinniped.dev
+  groupPriorityMinimum: {{ .Values.apiService.groupPriorityMinimum }}
+  versionPriority: {{ .Values.apiService.versionPriority }}
+  service:
+    name: {{ include "pinniped-supervisor.fullname" . }}-api
+    namespace: {{ .Release.Namespace }}
+    port: 443
