@@ -108,7 +108,7 @@ config:
 # cert-manager Certificate providing the TLS serving certificate for the front-door
 # Service/Ingress (also usable as a FederationDomain's tls.secretName)
 certificate:
-  enabled: true
+  enabled: false
   hostname: ""
   clusterIssuer: ""
   secretName: ""
@@ -117,11 +117,7 @@ certificate:
 
 # All of the *IdentityProviders/federationDomains/oidcClients lists below share the same shape:
 # each entry is `{name, spec}`, and `spec` is passed through as-is into the resource's spec field.
-# This applies equally to every identity provider type (OIDC/LDAP/ActiveDirectory/GitHub) -
-# `spec` is validated server-side by the CRD itself rather than re-modeled field-by-field here, so
-# no identity provider type gets deeper chart-level support than another. None of these lists have
-# a live default entry - pick whichever identity provider type(s) you actually use and populate
-# federationDomains plus the matching *IdentityProviders/*Secrets lists below.
+# This applies equally to every identity provider type (OIDC/LDAP/ActiveDirectory/GitHub)
 
 # https://pinniped.dev/docs/reference/crds/#federationdomain
 # e.g. - name: ""
@@ -220,16 +216,10 @@ githubClientSecrets: []
 # Ingress fronting the Supervisor's HTTPS endpoints (org-added convenience; not part of Pinniped's
 # upstream install manifest). TLS secret comes from certificate.secretName
 ingress:
-  enabled: true
+  enabled: false
   hostname: ""
-  ingressClassName: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-    nginx.ingress.kubernetes.io/proxy-buffers: "8 16k"
-    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "32k"
-    nginx.ingress.kubernetes.io/large-client-header-buffers: "8 16k"
+  ingressClassName: ""
+  annotations:  {}
 
 podDisruptionBudget:
   enabled: false
