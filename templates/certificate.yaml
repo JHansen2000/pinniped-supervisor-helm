@@ -1,4 +1,8 @@
 {{- if .Values.certificate.enabled }}
+{{- $dnsNames := .Values.certificate.dnsNames | compact | uniq }}
+{{- if not $dnsNames }}
+{{- fail "certificate.dnsNames must list at least one hostname when certificate.enabled=true" }}
+{{- end }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -23,7 +27,9 @@ spec:
     organizations:
       - cert-manager
   dnsNames:
-    - {{ required "certificate.hostname is required when certificate.enabled=true" .Values.certificate.hostname | quote }}
+    {{- range $dnsNames }}
+    - {{ . | quote }}
+    {{- end }}
   issuerRef:
     name: {{ required "certificate.clusterIssuer is required when certificate.enabled=true" .Values.certificate.clusterIssuer | quote }}
     kind: ClusterIssuer

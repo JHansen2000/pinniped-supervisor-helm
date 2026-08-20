@@ -109,7 +109,8 @@ config:
 # Service/Ingress (also usable as a FederationDomain's tls.secretName)
 certificate:
   enabled: false
-  hostname: ""
+  # At least one DNS Name is required when enabled=true.
+  dnsNames: []
   clusterIssuer: ""
   secretName: ""
   duration: 17280h # 2y
@@ -129,7 +130,7 @@ certificate:
 #            - displayName: ""
 #              objectRef:
 #                apiGroup: idp.supervisor.pinniped.dev
-#                kind: OIDCIdentityProvider # or LDAPIdentityProvider/ActiveDirectoryIdentityProvider/GitHubIdentityProvider
+#                kind: "" # OIDCIdentityProvider | LDAPIdentityProvider | ActiveDirectoryIdentityProvider | GitHubIdentityProvider
 #                name: ""
 federationDomains: []
 
@@ -213,13 +214,15 @@ bindSecrets: []
 #        clientSecret: ""
 githubClientSecrets: []
 
-# Ingress fronting the Supervisor's HTTPS endpoints (org-added convenience; not part of Pinniped's
-# upstream install manifest). TLS secret comes from certificate.secretName
+# Ingress fronting the Supervisor's HTTPS endpoints
 ingress:
   enabled: false
-  hostname: ""
+  hosts: []
+  # TLS secret the Ingress presents for the hostnames above. Required when enabled=true, falls
+  # back to certificate.secretName if not set
+  tlsSecretName: ""
   ingressClassName: ""
-  annotations:  {}
+  annotations: {}
 
 podDisruptionBudget:
   enabled: false

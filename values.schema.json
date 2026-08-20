@@ -75,7 +75,7 @@
       "required": ["enabled"],
       "properties": {
         "enabled": { "type": "boolean" },
-        "hostname": { "type": "string" },
+        "dnsNames": { "type": "array", "items": { "type": "string" } },
         "clusterIssuer": { "type": "string" },
         "secretName": { "type": "string" },
         "duration": { "type": "string" },
@@ -189,7 +189,8 @@
       "required": ["enabled"],
       "properties": {
         "enabled": { "type": "boolean" },
-        "hostname": { "type": "string" },
+        "hosts": { "type": "array", "items": { "type": "string" } },
+        "tlsSecretName": { "type": "string" },
         "ingressClassName": { "type": "string" },
         "annotations": { "type": "object" }
       }
