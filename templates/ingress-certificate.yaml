@@ -1,0 +1,38 @@
+{{- if .Values.ingress.certificate.create }}
+{{- $dnsNames := .Values.ingress.certificate.dnsNames | compact | uniq }}
+{{- if not $dnsNames }}
+{{- fail "ingress.certificate.dnsNames must list at least one hostname when ingress.certificate.create=true" }}
+{{- end }}
+{{- $fullname := include "pinniped-supervisor.fullname" . }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $fullname }}-ingress-tls-certificate
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pinniped-supervisor.labels" . | nindent 4 }}
+spec:
+  # Backs the Ingress's TLS termination (see ingress.yaml)
+  secretName: {{ printf "%s-ingress-tls-certificate" $fullname }}
+  privateKey:
+    rotationPolicy: Always
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  duration: {{ .Values.ingress.certificate.duration }}
+  renewBefore: {{ .Values.ingress.certificate.renewBefore }}
+  isCA: false
+  usages:
+    - server auth
+    - client auth
+  subject:
+    organizations:
+      - cert-manager
+  dnsNames:
+    {{- range $dnsNames }}
+    - {{ . | quote }}
+    {{- end }}
+  issuerRef:
+    name: {{ required "ingress.certificate.clusterIssuer is required when ingress.certificate.create=true" .Values.ingress.certificate.clusterIssuer | quote }}
+    kind: ClusterIssuer
+{{- end }}

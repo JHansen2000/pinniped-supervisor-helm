@@ -105,19 +105,23 @@ config:
     logInternalPaths: disabled
   aggregatedAPIServerDisableAdmissionPlugins: []
 
-# cert-manager Certificate providing the TLS serving certificate for the front-door
-# Service/Ingress (also usable as a FederationDomain's tls.secretName)
-certificate:
+
+# cert-manager Certificate that satisfies Pinniped's own required "default" TLS serving cert
+# (names.defaultTLSCertificateSecret)
+# https://pinniped.dev/docs/howto/supervisor/configure-supervisor/
+defaultTLSCertificate:
   enabled: false
-  # At least one DNS Name is required when enabled=true.
-  dnsNames: []
-  clusterIssuer: ""
-  secretName: ""
+  issuer:
+    kind: Issuer # Issuer | ClusterIssuer
+    # When true (recommended), the chart creates its own namespaced, self-signed Issuer
+    create: true
+    # Only used when create=false: reference an Issuer/ClusterIssuer you already have
+    name: ""
   duration: 17280h # 2y
   renewBefore: 360h # 15d
 
 # All of the *IdentityProviders/federationDomains/oidcClients lists below share the same shape:
-# each entry is `{name, spec}`, and `spec` is passed through as-is into the resource's spec field.
+# each entry is `{name, spec}`, and `spec` is passed through as-is into the resource's spec field
 # This applies equally to every identity provider type (OIDC/LDAP/ActiveDirectory/GitHub)
 
 # https://pinniped.dev/docs/reference/crds/#federationdomain
@@ -125,7 +129,7 @@ certificate:
 #        spec:
 #          issuer: "" # e.g. https://supervisor.example.com
 #          tls:
-#            secretName: "" # should match certificate.secretName above, if used
+#            secretName: "" # Optional, set if not using defaultTLSCertificate
 #          identityProviders:
 #            - displayName: ""
 #              objectRef:
@@ -218,11 +222,19 @@ githubClientSecrets: []
 ingress:
   enabled: false
   hosts: []
-  # TLS secret the Ingress presents for the hostnames above. Required when enabled=true, falls
-  # back to certificate.secretName if not set
+  # TLS secret the Ingress presents for the hostnames above, falls back to the Secret produced by
+  # certificate.create below when that's enabled
   tlsSecretName: ""
   ingressClassName: ""
   annotations: {}
+  # Optional cert-manager Certificate dedicated to this Ingress
+  certificate:
+    create: false
+    # At least one DNS name is required when create=true; should match ingress.hosts above.
+    dnsNames: []
+    clusterIssuer: ""
+    duration: 17280h # 2y
+    renewBefore: 360h # 15d
 
 podDisruptionBudget:
   enabled: false

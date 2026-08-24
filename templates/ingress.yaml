@@ -3,9 +3,9 @@
 {{- if not $hosts }}
 {{- fail "ingress.hosts must list at least one hostname when ingress.enabled=true" }}
 {{- end }}
-{{- $tlsSecretName := .Values.ingress.tlsSecretName | default .Values.certificate.secretName }}
-{{- if not $tlsSecretName }}
-{{- fail "ingress.tlsSecretName is required when ingress.enabled=true (or set certificate.secretName to fall back to the bundled Certificate's secret)" }}
+{{- $tlsSecretName := .Values.ingress.tlsSecretName }}
+{{- if and (not $tlsSecretName) .Values.ingress.certificate.create }}
+{{- $tlsSecretName = printf "%s-ingress-tls-certificate" (include "pinniped-supervisor.fullname" .) }}
 {{- end }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -27,7 +27,9 @@ spec:
         {{- range $hosts }}
         - {{ . | quote }}
         {{- end }}
+      {{- if $tlsSecretName }}
       secretName: {{ $tlsSecretName | quote }}
+      {{- end }}
   rules:
     {{- range $hosts }}
     - host: {{ . | quote }}

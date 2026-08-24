@@ -8,15 +8,16 @@ Image:         {{ include "pinniped-supervisor.image" . }}
 Check rollout status with:
 {{- range .Values.federationDomains }}
   kubectl get federationdomain {{ .name }} -n {{ $.Release.Namespace }} -o yaml
-  kubectl get jwtauthenticator supervisor-jwt-authenticator -o yaml
 {{- end }}
 {{- end }}
 
-{{- if not .Values.certificate.enabled }}
+{{- if and (not .Values.defaultTLSCertificate.enabled) .Values.federationDomains }}
 
-NOTE: certificate.enabled is false. Make sure the Secret referenced by certificate.secretName
-(used by ingress.* and any federationDomains[].tls.secretName) exists before the FederationDomain(s)
-can serve HTTPS.
+NOTE: defaultTLSCertificate.enabled is false, and none of your federationDomains[] set their own
+spec.tls.secretName. Pinniped requires a default TLS serving cert in this situation - without one,
+HTTPS requests to the Supervisor will fail with "pinniped supervisor has invalid TLS serving
+certificate configuration". Enable defaultTLSCertificate, or set spec.tls.secretName on every
+FederationDomain instead. See: https://pinniped.dev/docs/howto/supervisor/configure-supervisor/
 {{- end }}
 
 {{- if not .Values.ingress.enabled }}

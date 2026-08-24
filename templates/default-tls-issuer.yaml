@@ -1,0 +1,13 @@
+{{- if and .Values.defaultTLSCertificate.enabled .Values.defaultTLSCertificate.issuer.create }}
+apiVersion: cert-manager.io/v1
+kind: {{ .Values.defaultTLSCertificate.issuer.kind }}
+metadata:
+  name: {{ include "pinniped-supervisor.fullname" . }}-default-tls-issuer
+  {{- if eq .Values.defaultTLSCertificate.issuer.kind "Issuer" }}
+  namespace: {{ .Release.Namespace }}
+  {{- end }}
+  labels:
+    {{- include "pinniped-supervisor.labels" . | nindent 4 }}
+spec:
+  selfSigned: {}
+{{- end }}
