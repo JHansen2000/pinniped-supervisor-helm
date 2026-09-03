@@ -2,7 +2,7 @@
 
 ## Install
 ```bash
-helm install pinniped-supervisor pinniped-supervisor-chart --namespace pinniped-supervisor --atomic --values <your-values.yaml>
+helm install pinniped-supervisor pinniped-supervisor-helm --namespace pinniped-supervisor --atomic --values <your-values.yaml>
 ```
 
 ## TLS Certificates
@@ -62,6 +62,3 @@ brew install vmware/pinniped/pinniped-cli
 
 pinniped get kubeconfig --kubeconfig="~/.kube/config" --upstream-identity-provider-name "Keycloak OIDC" --upstream-identity-provider-type oidc > ~/.kube/pinniped
 ```
-
-## RBAC
-Kubernetes RBAC policies are *not* controlled by these charts. Recommended to use RBAC Manager to configure these.
