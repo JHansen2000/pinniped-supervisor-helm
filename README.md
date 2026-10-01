@@ -31,6 +31,42 @@ shape.
 | Active Directory | `activeDirectoryIdentityProviders` | `bindSecrets` (`{name, username, password}`) |
 | GitHub | `githubIdentityProviders` | `githubClientSecrets` (`{name, clientID, clientSecret}`) |
 
+### Existing Secrets
+
+Set `existingSecret: true` on a credential Secret entry to reference a Secret you manage yourself. `name` is the existing Secret's name. Pinniped requires a fixed type and keys:
+
+| List | Type | Keys |
+| --- | --- | --- |
+| `oidcClientSecrets` | `secrets.pinniped.dev/oidc-client` | `clientID`, `clientSecret` |
+| `bindSecrets` | `kubernetes.io/basic-auth` | `username`, `password` |
+| `githubClientSecrets` | `secrets.pinniped.dev/github-client` | `clientID`, `clientSecret` |
+
+If your source Secret uses different key names, remap them with an External Secrets Operator
+`ExternalSecret` in `extraManifests`. 
+```yaml
+bindSecrets:
+  - name: ad-bind
+    existingSecret: true
+
+extraManifests:
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: ad-bind
+    spec:
+      secretStoreRef: {kind: ClusterSecretStore, name: vault}
+      target:
+        name: ad-bind
+        template:
+          type: kubernetes.io/basic-auth
+          data:
+            username: '{{ "{{ .bindUser }}" }}'
+            password: '{{ "{{ .bindPw }}" }}'
+      data:
+        - {secretKey: bindUser, remoteRef: {key: ad, property: user}}
+        - {secretKey: bindPw, remoteRef: {key: ad, property: pw}}
+```
+
 ## Configuration
 
 Full field list/defaults in `values.yaml`.
@@ -43,7 +79,7 @@ Full field list/defaults in `values.yaml`.
 | `service.api.*` / `service.oidc.*` | Aggregated-APIService Service vs. the OIDC front-door Service that Ingress routes to. |
 | `config.*` | Structured `pinniped.yaml` operator config, rendered into the static-config ConfigMap. |
 | `defaultTLSCertificate` / `ingress.certificate` | See TLS section above. |
-| `oidcClientSecrets` / `bindSecrets` / `githubClientSecrets` | Chart-managed credential Secrets backing the identity provider lists above. |
+| `oidcClientSecrets` / `bindSecrets` / `githubClientSecrets` | Chart-managed credential Secrets backing the identity provider lists above, or `existingSecret: true` to reference your own. |
 | `podDisruptionBudget.enabled` | Off by default. |
 | `extraManifests` | Arbitrary objects, templated with `tpl`. |
 | `nameOverride` / `fullnameOverride` | Rename chart-created resources. |
