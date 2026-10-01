@@ -202,6 +202,7 @@ oidcClients: []
 # e.g. - name: ""
 #        clientID: ""
 #        clientSecret: ""
+#        existingSecret: false # true: reference a pre-existing Secret named `name` instead (must have the type/keys above)
 oidcClientSecrets: []
 
 # Secret(s) of type kubernetes.io/basic-auth holding the username/password referenced by
@@ -209,6 +210,7 @@ oidcClientSecrets: []
 # e.g. - name: ""
 #        username: ""
 #        password: ""
+#        existingSecret: false # true: reference a pre-existing Secret named `name` instead (must have the type/keys above)
 bindSecrets: []
 
 # Secret(s) of type secrets.pinniped.dev/github-client holding the clientID/clientSecret referenced by
@@ -216,6 +218,7 @@ bindSecrets: []
 # e.g. - name: ""
 #        clientID: ""
 #        clientSecret: ""
+#        existingSecret: false # true: reference a pre-existing Secret named `name` instead (must have the type/keys above)
 githubClientSecrets: []
 
 # Ingress fronting the Supervisor's HTTPS endpoints
