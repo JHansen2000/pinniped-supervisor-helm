@@ -53,3 +53,19 @@ deployment.pinniped.dev: supervisor
 {{- printf "%s:%s" .Values.image.repository $tag -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "pinniped-supervisor.verifyExistingSecret" -}}
+{{- $secret := lookup "v1" "Secret" .root.Release.Namespace .name -}}
+{{- if $secret -}}
+{{- if ne $secret.type .type -}}
+{{- fail (printf "%s: existing Secret %q must be of type %q, got %q" .path .name .type $secret.type) -}}
+{{- end -}}
+{{- range .keys -}}
+{{- if not (hasKey (dig "data" dict $secret) .) -}}
+{{- fail (printf "%s: existing Secret %q is missing key %q" $.path $.name .) -}}
+{{- end -}}
+{{- end -}}
+{{- else if lookup "v1" "Namespace" "" "kube-system" -}}
+{{- fail (printf "%s: existing Secret %q not found in namespace %q" .path .name .root.Release.Namespace) -}}
+{{- end -}}
+{{- end -}}

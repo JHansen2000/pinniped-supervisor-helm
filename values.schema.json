@@ -161,7 +161,8 @@
         "properties": {
           "name": { "type": "string", "minLength": 1 },
           "clientID": { "type": "string" },
-          "clientSecret": { "type": "string" }
+          "clientSecret": { "type": "string" },
+          "existingSecret": { "type": "boolean" }
         }
       }
     },
@@ -173,7 +174,8 @@
         "properties": {
           "name": { "type": "string", "minLength": 1 },
           "username": { "type": "string" },
-          "password": { "type": "string" }
+          "password": { "type": "string" },
+          "existingSecret": { "type": "boolean" }
         }
       }
     },
@@ -185,7 +187,8 @@
         "properties": {
           "name": { "type": "string", "minLength": 1 },
           "clientID": { "type": "string" },
-          "clientSecret": { "type": "string" }
+          "clientSecret": { "type": "string" },
+          "existingSecret": { "type": "boolean" }
         }
       }
     },
